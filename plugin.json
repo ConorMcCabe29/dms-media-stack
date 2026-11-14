@@ -1,0 +1,18 @@
+{
+    "id": "mediaStack",
+    "name": "Media Stack",
+    "description": "Docker containers on the media VM over SSH: running count in the bar, a grouped list with links, and alerts when one stops",
+    "version": "1.0.0",
+    "author": "indigo",
+    "type": "composite",
+    "capabilities": ["daemon", "dankbar-widget"],
+    "icon": "dns",
+    "components": {
+        "daemon": "./MediaStackDaemon.qml",
+        "widget": "./MediaStackWidget.qml"
+    },
+    "settings": "./MediaStackSettings.qml",
+    "requires_dms": ">=1.7.0",
+    "requires": ["ssh"],
+    "permissions": ["settings_read", "settings_write"]
+}
