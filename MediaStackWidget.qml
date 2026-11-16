@@ -5,6 +5,7 @@ import qs.Services
 import qs.Widgets
 import qs.DCommon.Widgets
 import qs.Modules.Plugins
+import "grouping.js" as G
 
 // Bar pill: server icon coloured by health + "running/total".
 // Click: grouped list of containers; click one to open it in the browser.
@@ -34,29 +35,8 @@ PluginComponent {
         if (c?.url) Quickshell.execDetached(["xdg-open", c.url])
     }
 
-    readonly property var defaultLabels: ({
-        "jellyfin": "Films & TV", "plex": "Films & TV", "emby": "Films & TV",
-        "seerr": "Requests", "jellyseerr": "Requests", "overseerr": "Requests", "ombi": "Requests",
-        "radarr": "Films", "sonarr": "TV shows", "lidarr": "Music", "readarr": "Books", "bazarr": "Subtitles",
-        "prowlarr": "Indexers", "jackett": "Indexers", "flaresolverr": "Cloudflare bypass",
-        "qbittorrent": "Downloads", "transmission": "Downloads", "sabnzbd": "Downloads", "nzbget": "Downloads",
-        "slskd": "Soulseek", "soularr": "Soulseek ↔ Lidarr",
-        "navidrome": "Music streaming", "audiobookshelf": "Audiobooks", "recommendarr": "Recommendations",
-        "gluetun": "VPN", "vpn": "VPN"
-    })
-    function label(name) {
-        const link = (pluginData.links ?? []).find(l => l.container === name && l.label)
-        return link?.label ?? pluginData.labels?.[name] ?? defaultLabels[name] ?? ""
-    }
+    function label(name) { return G.label(pluginData, name) }
 
-    readonly property var defaultGroups: [
-        { name: "Media",          collapsible: false,
-                                  members: ["jellyfin", "plex", "emby", "navidrome", "audiobookshelf", "novel-reader"] },
-        { name: "Request",        members: ["seerr", "jellyseerr", "overseerr", "ombi", "recommendarr"] },
-        { name: "Libraries",      members: ["radarr", "sonarr", "lidarr", "readarr", "bazarr"] },
-        { name: "Downloading",    members: ["qbittorrent", "transmission", "sabnzbd", "nzbget", "prowlarr", "jackett",
-                                            "slskd", "soularr", "flaresolverr", "gluetun", "vpn"] }
-    ]
     // Groups are dropdowns (closed by default) unless they set collapsible: false.
     // Which ones are open is remembered until the shell restarts.
     property var expanded: ({})
@@ -69,27 +49,20 @@ PluginComponent {
     // [{ header: "Media", … }, container, container, { header: "Request", … }, …]
     // Rows of closed groups are left out; their header shows a running count instead.
     // Settings: "dropdowns" (default), "open" (headers, never collapsed) or "none" (one flat list).
+    // Names, groups and order come from the "Containers" section of the settings (see grouping.js).
     readonly property string grouping: pluginData.grouping || "dropdowns"
     readonly property var grouped: {
-        if (grouping === "none") return containers
-        const out = [], placed = new Set()
-        const add = (name, members, collapsible) => {
-            collapsible = collapsible && grouping === "dropdowns"
-            const open = !collapsible || !!expanded[name]
-            const up = members.filter(c => c.state === "running").length
-            const unhealthy = members.some(c => (c.status ?? "").includes("unhealthy"))
-            out.push({ header: name, collapsible, open, up, total: members.length,
-                       health: up < members.length ? "down" : unhealthy ? "unhealthy" : "ok" })
-            if (open) out.push(...members)
+        if (grouping === "none") return G.sortContainers(pluginData, containers)
+        const out = []
+        for (const g of G.build(pluginData, containers)) {
+            const collapsible = g.collapsible && grouping === "dropdowns"
+            const open = !collapsible || !!expanded[g.name]
+            const up = g.members.filter(c => c.state === "running").length
+            const unhealthy = g.members.some(c => (c.status ?? "").includes("unhealthy"))
+            out.push({ header: g.name, collapsible, open, up, total: g.members.length,
+                       health: up < g.members.length ? "down" : unhealthy ? "unhealthy" : "ok" })
+            if (open) out.push(...g.members)
         }
-        for (const g of (pluginData.groups ?? defaultGroups)) {
-            const members = g.members.map(n => containers.find(c => c.name === n)).filter(c => c)
-            if (!members.length) continue
-            for (const c of members) placed.add(c.name)
-            add(g.name, members, g.collapsible ?? true)
-        }
-        const rest = containers.filter(c => !placed.has(c.name))
-        if (rest.length) add("Other", rest, true)
         return out
     }
 
@@ -290,7 +263,8 @@ PluginComponent {
                         anchors.rightMargin: Theme.spacingS
                         anchors.verticalCenter: parent.verticalCenter
                         elide: Text.ElideRight
-                        text: row.lbl ? `${row.modelData.name} <font color="${Theme.surfaceVariantText}">(${row.lbl})</font>` : row.modelData.name
+                        readonly property string shown: G.displayName(root.pluginData, row.modelData.name)
+                        text: row.lbl ? `${shown} <font color="${Theme.surfaceVariantText}">(${row.lbl})</font>` : shown
                         textFormat: Text.StyledText
                         color: Theme.surfaceText
                         font.pixelSize: Theme.fontSizeMedium
