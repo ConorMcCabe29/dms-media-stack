@@ -68,9 +68,13 @@ PluginComponent {
 
     // [{ header: "Media", … }, container, container, { header: "Request", … }, …]
     // Rows of closed groups are left out; their header shows a running count instead.
+    // Settings: "dropdowns" (default), "open" (headers, never collapsed) or "none" (one flat list).
+    readonly property string grouping: pluginData.grouping || "dropdowns"
     readonly property var grouped: {
+        if (grouping === "none") return containers
         const out = [], placed = new Set()
         const add = (name, members, collapsible) => {
+            collapsible = collapsible && grouping === "dropdowns"
             const open = !collapsible || !!expanded[name]
             const up = members.filter(c => c.state === "running").length
             const unhealthy = members.some(c => (c.status ?? "").includes("unhealthy"))
@@ -131,7 +135,9 @@ PluginComponent {
         }
     }
 
-    popoutWidth: 380
+    // Popout size from settings (pixels); the list scrolls once it's taller than listHeight.
+    readonly property int listHeight: Math.max(150, parseInt(pluginData.listHeight ?? 600) || 600)
+    popoutWidth: Math.max(300, parseInt(pluginData.popoutWidth ?? 380) || 380)
     popoutContent: Component {
         PopoutComponent {
             id: pop
@@ -141,7 +147,7 @@ PluginComponent {
 
             Flickable {
                 width: parent.width
-                height: Math.min(list.implicitHeight, 600)
+                height: Math.min(list.implicitHeight, root.listHeight)
                 contentHeight: list.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds

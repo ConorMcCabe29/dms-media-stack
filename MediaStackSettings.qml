@@ -36,6 +36,34 @@ PluginSettings {
         description: "Notify when a container stops, turns unhealthy, comes back, or the VM can't be reached"
         defaultValue: true
     }
+    SelectionSetting {
+        settingKey: "grouping"
+        label: "Grouping"
+        description: "How containers are listed in the popout"
+        options: [
+            { label: "Groups as dropdowns", value: "dropdowns" },
+            { label: "Groups, always open", value: "open" },
+            { label: "No groups (A–Z list)", value: "none" }
+        ]
+        defaultValue: "dropdowns"
+    }
+    SliderSetting {
+        settingKey: "listHeight"
+        label: "List height"
+        description: "Tallest the container list gets before it scrolls"
+        minimum: 150
+        maximum: 1200
+        defaultValue: 600
+        unit: "px"
+    }
+    SliderSetting {
+        settingKey: "popoutWidth"
+        label: "Popout width"
+        minimum: 300
+        maximum: 800
+        defaultValue: 380
+        unit: "px"
+    }
     ListSettingWithInput {
         settingKey: "links"
         label: "Links"

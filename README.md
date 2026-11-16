@@ -3,7 +3,7 @@
 A DankMaterialShell / Dux Shell bar widget for a Docker media server (Jellyfin, *arr apps, downloaders…) on another machine, checked over SSH.
 
 - **Bar pill:** server icon (green = all running, amber = something stopped/unhealthy, red = VM unreachable) and `running/total`.
-- **Click:** grouped list of containers with uptime; click one to open its link. Media is always shown; the other groups are dropdowns (closed by default) whose header shows how many are running.
+- **Click:** grouped list of containers with uptime; click one to open its link. By default Media is always shown and the other groups are dropdowns (closed by default) whose header shows how many are running; settings can keep every group open or drop grouping.
 - **Right-click:** opens the `primary` container (default jellyfin).
 - **Notifications** when a container stops, turns unhealthy, comes back, or the VM can't be reached twice in a row.
 
@@ -38,7 +38,8 @@ then set the host in Settings → Plugins → Media Stack and add "Media Stack" 
 ## Settings
 
 Everything is in Settings → Plugins → Media Stack: SSH host, right-click target, check interval,
-notifications, and **Links**: per container, the URL it opens (e.g. `jellyfin` →
+notifications, **grouping** (dropdowns, always-open groups, or one A–Z list), **list height** and
+**popout width** sliders, and **Links**: per container, the URL it opens (e.g. `jellyfin` →
 `https://jelly.example.com`) and an optional label. Without a link, a container opens its first
 published TCP port on the host (`http://<host>:<port>`).
 
