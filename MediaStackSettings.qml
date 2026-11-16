@@ -47,14 +47,12 @@ PluginSettings {
         ]
         defaultValue: "dropdowns"
     }
-    SliderSetting {
+    StringSetting {
         settingKey: "listHeight"
-        label: "List height"
-        description: "Tallest the container list gets before it scrolls"
-        minimum: 150
-        maximum: 1200
-        defaultValue: 600
-        unit: "px"
+        label: "List height (px)"
+        description: "Tallest the container list gets before it scrolls. Type a number of pixels, at least 150."
+        placeholder: "600"
+        defaultValue: "600"
     }
     SliderSetting {
         settingKey: "popoutWidth"
