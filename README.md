@@ -39,7 +39,8 @@ then set the host in Settings → Plugins → Media Stack and add "Media Stack" 
 
 Everything is in Settings → Plugins → Media Stack: SSH host, right-click target, check interval,
 notifications, **grouping** (dropdowns, always-open groups, or one A–Z list), **list height** and
-**popout width** (type the pixels), **Containers** (a row per container: display name, group
+**popout width** (type the pixels, or press **Fit to current list** to size the popout to the list as
+it last looked), **Containers** (a row per container: display name, group
 — an existing one or a new one — and up/down arrows for order, plus arrows to reorder groups), and **Links**: per container, the URL it opens (e.g. `jellyfin` →
 `https://jelly.example.com`) and an optional label. Without a link, a container opens its first
 published TCP port on the host (`http://<host>:<port>`).

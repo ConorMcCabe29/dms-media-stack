@@ -51,6 +51,7 @@ PluginSettings {
         defaultValue: "dropdowns"
     }
     StringSetting {
+        id: heightSetting
         settingKey: "listHeight"
         label: "List height (px)"
         description: "Tallest the container list gets before it scrolls. Type a number of pixels, at least 150."
@@ -58,11 +59,55 @@ PluginSettings {
         defaultValue: "600"
     }
     StringSetting {
+        id: widthSetting
         settingKey: "popoutWidth"
         label: "Popout width (px)"
         description: "Width of the popout in pixels, at least 300."
         placeholder: "380"
         defaultValue: "380"
+    }
+    // Copies the size the popout's list measured the last time it was open into the two boxes above.
+    Row {
+        id: fit
+        readonly property int fitW: PluginService.globalVars["mediaStack"]?.fitWidth ?? 0
+        readonly property int fitH: PluginService.globalVars["mediaStack"]?.fitHeight ?? 0
+        readonly property bool ready: fitW > 0 && fitH > 0
+        spacing: Theme.spacingM
+
+        StyledRect {
+            width: fitRow.implicitWidth + Theme.spacingM * 2
+            height: 36
+            radius: Theme.cornerRadius
+            color: fitArea.containsMouse && fit.ready ? Theme.primaryHover : Theme.chipSurface
+            opacity: fit.ready ? 1 : 0.5
+            Row {
+                id: fitRow
+                anchors.centerIn: parent
+                spacing: Theme.spacingXS
+                DIcon { name: "fit_screen"; size: 18; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                StyledText { text: "Fit to current list"; color: Theme.surfaceText; font.pixelSize: Theme.fontSizeMedium; anchors.verticalCenter: parent.verticalCenter }
+            }
+            MouseArea {
+                id: fitArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: fit.ready ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: {
+                    if (!fit.ready) return
+                    root.saveValue("listHeight", String(Math.max(150, fit.fitH)))
+                    root.saveValue("popoutWidth", String(Math.max(300, fit.fitW)))
+                    heightSetting.loadValue()
+                    widthSetting.loadValue()
+                }
+            }
+        }
+        StyledText {
+            anchors.verticalCenter: parent.verticalCenter
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.surfaceVariantText
+            text: fit.ready ? `${fit.fitW} × ${fit.fitH} px, as the list looked when the popout was last open`
+                            : "Open the popout once, then come back here"
+        }
     }
     // ---- Containers: rename, regroup and reorder every container the VM reports ----
     Column {

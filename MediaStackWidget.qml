@@ -130,6 +130,20 @@ PluginComponent {
                     width: parent.width
                     spacing: 2
 
+                    // Publish the size this list needs (height as shown now, width with nothing cut off),
+                    // for the "Fit to current list" button in settings.
+                    function measure() {
+                        let w = 0
+                        for (const ch of children) w = Math.max(w, ch.item?.neededWidth ?? 0)
+                        if (!w || !root.popoutWidth) return
+                        const extra = root.popoutWidth - list.width   // popout padding around the list
+                        PluginService.setGlobalVar("mediaStack", "fitHeight", Math.ceil(list.implicitHeight))
+                        PluginService.setGlobalVar("mediaStack", "fitWidth", Math.ceil(w + extra))
+                    }
+                    onImplicitHeightChanged: Qt.callLater(measure)
+                    onWidthChanged: Qt.callLater(measure)
+                    Component.onCompleted: Qt.callLater(measure)
+
                     Repeater {
                         model: root.grouped
                         delegate: Loader {
@@ -161,6 +175,7 @@ PluginComponent {
                 id: groupHeader
                 StyledText {
                     readonly property var modelData: parent?.modelData ?? ({})
+                    readonly property real neededWidth: implicitWidth
                     text: modelData.header ?? ""
                     font.pixelSize: Theme.fontSizeSmall
                     font.weight: Font.DemiBold
@@ -179,6 +194,8 @@ PluginComponent {
                 StyledRect {
                     id: tog
                     readonly property var modelData: parent?.modelData ?? ({})
+                    readonly property real neededWidth: chevron.x + chevron.width + Theme.spacingXS + togTitle.implicitWidth
+                                                        + Theme.spacingL + togCount.implicitWidth + Theme.spacingS
                     readonly property color healthColor: modelData.health === "down" ? Theme.error
                         : modelData.health === "unhealthy" ? Theme.warning : Theme.success
                     height: 36
@@ -196,6 +213,7 @@ PluginComponent {
                         Behavior on rotation { NumberAnimation { duration: 120 } }
                     }
                     StyledText {
+                        id: togTitle
                         anchors.left: chevron.right
                         anchors.leftMargin: Theme.spacingXS
                         anchors.verticalCenter: parent.verticalCenter
@@ -207,6 +225,7 @@ PluginComponent {
                         color: Theme.primary
                     }
                     Row {
+                        id: togCount
                         anchors.right: parent.right
                         anchors.rightMargin: Theme.spacingS
                         anchors.verticalCenter: parent.verticalCenter
@@ -243,6 +262,9 @@ PluginComponent {
                     readonly property bool up: modelData.state === "running"
                     readonly property bool unhealthy: (modelData.status ?? "").includes("unhealthy")
                     readonly property string lbl: root.label(modelData.name)
+                    readonly property real neededWidth: dot.x + dot.width + Theme.spacingS + 3 + nameText.implicitWidth
+                                                        + Theme.spacingS + detail.implicitWidth + Theme.spacingS
+                                                        + link.width + Theme.spacingS
                     height: 36
                     radius: Theme.cornerRadius
                     color: rowArea.containsMouse && modelData.url ? Theme.chipSurface : "transparent"
@@ -257,6 +279,7 @@ PluginComponent {
                         x: Theme.spacingS + 3
                     }
                     StyledText {
+                        id: nameText
                         anchors.left: dot.right
                         anchors.leftMargin: Theme.spacingS + 3
                         anchors.right: detail.left
