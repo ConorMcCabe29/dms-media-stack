@@ -54,13 +54,12 @@ PluginSettings {
         placeholder: "600"
         defaultValue: "600"
     }
-    SliderSetting {
+    StringSetting {
         settingKey: "popoutWidth"
-        label: "Popout width"
-        minimum: 300
-        maximum: 800
-        defaultValue: 380
-        unit: "px"
+        label: "Popout width (px)"
+        description: "Width of the popout in pixels, at least 300."
+        placeholder: "380"
+        defaultValue: "380"
     }
     ListSettingWithInput {
         settingKey: "links"
