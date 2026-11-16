@@ -3,7 +3,7 @@
 Port of niri-bar's media-stack widget to DankMaterialShell / Dux Shell.
 
 - **Bar pill:** server icon (green = all running, amber = something stopped/unhealthy, red = VM unreachable) and `running/total`.
-- **Click:** grouped list of containers with uptime; click one to open its link.
+- **Click:** grouped list of containers with uptime; click one to open its link. Media is always shown; the other groups are dropdowns (closed by default) whose header shows how many are running.
 - **Right-click:** opens the `primary` container (default jellyfin).
 - **Notifications** when a container stops, turns unhealthy, comes back, or the VM can't be reached twice in a row.
 

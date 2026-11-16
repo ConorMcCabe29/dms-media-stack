@@ -47,23 +47,42 @@ PluginComponent {
     function label(name) { return pluginData.labels?.[name] ?? defaultLabels[name] ?? "" }
 
     readonly property var defaultGroups: [
-        { name: "Watch & listen", members: ["jellyfin", "plex", "emby", "navidrome", "audiobookshelf", "novel-reader"] },
+        { name: "Media",          collapsible: false,
+                                  members: ["jellyfin", "plex", "emby", "navidrome", "audiobookshelf", "novel-reader"] },
         { name: "Request",        members: ["seerr", "jellyseerr", "overseerr", "ombi", "recommendarr"] },
         { name: "Libraries",      members: ["radarr", "sonarr", "lidarr", "readarr", "bazarr"] },
         { name: "Downloading",    members: ["qbittorrent", "transmission", "sabnzbd", "nzbget", "prowlarr", "jackett",
                                             "slskd", "soularr", "flaresolverr", "gluetun", "vpn"] }
     ]
-    // [{ header: "Watch & listen" }, container, container, { header: "Request" }, …]
+    // Groups are dropdowns (closed by default) unless they set collapsible: false.
+    // Which ones are open is remembered until the shell restarts.
+    property var expanded: ({})
+    function toggle(name) {
+        const e = Object.assign({}, expanded)
+        e[name] = !e[name]
+        expanded = e
+    }
+
+    // [{ header: "Media", … }, container, container, { header: "Request", … }, …]
+    // Rows of closed groups are left out; their header shows a running count instead.
     readonly property var grouped: {
         const out = [], placed = new Set()
+        const add = (name, members, collapsible) => {
+            const open = !collapsible || !!expanded[name]
+            const up = members.filter(c => c.state === "running").length
+            const unhealthy = members.some(c => (c.status ?? "").includes("unhealthy"))
+            out.push({ header: name, collapsible, open, up, total: members.length,
+                       health: up < members.length ? "down" : unhealthy ? "unhealthy" : "ok" })
+            if (open) out.push(...members)
+        }
         for (const g of (pluginData.groups ?? defaultGroups)) {
             const members = g.members.map(n => containers.find(c => c.name === n)).filter(c => c)
             if (!members.length) continue
-            out.push({ header: g.name })
-            for (const c of members) { out.push(c); placed.add(c.name) }
+            for (const c of members) placed.add(c.name)
+            add(g.name, members, g.collapsible ?? true)
         }
         const rest = containers.filter(c => !placed.has(c.name))
-        if (rest.length) { out.push({ header: "Other" }); out.push(...rest) }
+        if (rest.length) add("Other", rest, true)
         return out
     }
 
@@ -134,7 +153,8 @@ PluginComponent {
                         delegate: Loader {
                             required property var modelData
                             width: list.width
-                            sourceComponent: modelData.header !== undefined ? groupHeader : serviceRow
+                            sourceComponent: modelData.header === undefined ? serviceRow
+                                           : modelData.collapsible ? groupToggle : groupHeader
                         }
                     }
 
@@ -168,6 +188,68 @@ PluginComponent {
                     leftPadding: Theme.spacingS
                     topPadding: Theme.spacingS
                     bottomPadding: 2
+                }
+            }
+
+            // Dropdown header: chevron + name, and a running count with a status dot.
+            Component {
+                id: groupToggle
+                StyledRect {
+                    id: tog
+                    readonly property var modelData: parent?.modelData ?? ({})
+                    readonly property color healthColor: modelData.health === "down" ? Theme.error
+                        : modelData.health === "unhealthy" ? Theme.warning : Theme.success
+                    height: 36
+                    radius: Theme.cornerRadius
+                    color: togArea.containsMouse ? Theme.chipSurface : "transparent"
+
+                    DIcon {
+                        id: chevron
+                        name: "chevron_right"
+                        size: Theme.iconSizeSmall
+                        color: Theme.primary
+                        rotation: tog.modelData.open ? 90 : 0
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Theme.spacingS - 2
+                        Behavior on rotation { NumberAnimation { duration: 120 } }
+                    }
+                    StyledText {
+                        anchors.left: chevron.right
+                        anchors.leftMargin: Theme.spacingXS
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: tog.modelData.header ?? ""
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.DemiBold
+                        font.capitalization: Font.AllUppercase
+                        font.letterSpacing: 0.6
+                        color: Theme.primary
+                    }
+                    Row {
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.spacingS
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: Theme.spacingXS
+                        DIcon {
+                            name: "circle"
+                            filled: true
+                            size: 8
+                            color: tog.healthColor
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        StyledText {
+                            text: `${tog.modelData.up}/${tog.modelData.total}`
+                            color: tog.modelData.health === "ok" ? Theme.surfaceVariantText : tog.healthColor
+                            font.pixelSize: Theme.fontSizeSmall
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                    MouseArea {
+                        id: togArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggle(tog.modelData.header)
+                    }
                 }
             }
 
