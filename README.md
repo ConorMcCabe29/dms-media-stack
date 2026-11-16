@@ -1,6 +1,6 @@
 # Media Stack (DMS plugin)
 
-Port of niri-bar's media-stack widget to DankMaterialShell / Dux Shell.
+A DankMaterialShell / Dux Shell bar widget for a Docker media server (Jellyfin, *arr apps, downloaders…) on another machine, checked over SSH.
 
 - **Bar pill:** server icon (green = all running, amber = something stopped/unhealthy, red = VM unreachable) and `running/total`.
 - **Click:** grouped list of containers with uptime; click one to open its link. Media is always shown; the other groups are dropdowns (closed by default) whose header shows how many are running.
@@ -9,22 +9,47 @@ Port of niri-bar's media-stack widget to DankMaterialShell / Dux Shell.
 
 One daemon polls `ssh <host> docker ps -a` (every `intervalSec`) and shares the result with every bar through plugin global vars, so two monitors don't mean two SSH calls.
 
+## Requirements
+
+- DankMaterialShell / Dux Shell (tested on 2.1.2 with niri)
+- A Linux VM/server running Docker that you can SSH into, as a user in the `docker` group
+- `ssh`, `git`, `python3` on your PC; `notify-send` (libnotify) for alerts, `xdg-open` for links
+
 ## Install
 
-    ln -s ~/Projects/dms-media-stack ~/.config/dms/plugins/mediaStack
+    curl -fsSL https://raw.githubusercontent.com/ConorMcCabe29/dms-media-stack/main/install.sh | bash
+
+The installer asks for your VM's `user@address`, sets up SSH key login if you don't have it yet
+(creates a key and runs `ssh-copy-id`, so you type the VM password once), checks that `docker ps` works
+there, saves the host, enables the plugin and adds it to your bar. DMS restarts once while it does this;
+the old `settings.json` / `plugin_settings.json` are backed up next to the originals.
+Run it again to update the plugin or change the host.
+
+If `docker ps` fails with "permission denied", run `sudo usermod -aG docker <user>` on the VM,
+log out of it, and run the installer again.
+
+**Manual install** (e.g. to hack on it):
+
+    git clone https://github.com/ConorMcCabe29/dms-media-stack ~/.config/dms/plugins/mediaStack
     dms ipc call plugins enable mediaStack
 
-Then add "Media Stack" to a bar in Settings → Dank Bar → Widgets.
+then set the host in Settings → Plugins → Media Stack and add "Media Stack" in Settings → Dank Bar → Widgets.
 
 ## Settings
 
-Host, right-click target, interval and notifications are in Settings → Plugins → Media Stack.
-Links and labels are in `~/.config/dms/plugin_settings.json` under `mediaStack.urls` / `mediaStack.labels`
-(e.g. `"urls": { "jellyfin": "https://jelly.example.com" }`). Without a custom link, a container links
-to its first published TCP port on the host. DMS reads that file only at startup, so stop DMS
-(`systemctl --user stop dms`) before editing it, then start it again.
+Everything is in Settings → Plugins → Media Stack: SSH host, right-click target, check interval,
+notifications, and **Links**: per container, the URL it opens (e.g. `jellyfin` →
+`https://jelly.example.com`) and an optional label. Without a link, a container opens its first
+published TCP port on the host (`http://<host>:<port>`).
+
+The older `urls` / `labels` maps in `~/.config/dms/plugin_settings.json` still work; Links set in
+the settings page win over them.
 
 ## IPC
 
     dms ipc call mediaStack status    # e.g. "12/12 running: ..."
     dms ipc call mediaStack refresh
+
+## Licence
+
+MIT

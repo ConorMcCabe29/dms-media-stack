@@ -44,7 +44,10 @@ PluginComponent {
         "navidrome": "Music streaming", "audiobookshelf": "Audiobooks", "recommendarr": "Recommendations",
         "gluetun": "VPN", "vpn": "VPN"
     })
-    function label(name) { return pluginData.labels?.[name] ?? defaultLabels[name] ?? "" }
+    function label(name) {
+        const link = (pluginData.links ?? []).find(l => l.container === name && l.label)
+        return link?.label ?? pluginData.labels?.[name] ?? defaultLabels[name] ?? ""
+    }
 
     readonly property var defaultGroups: [
         { name: "Media",          collapsible: false,

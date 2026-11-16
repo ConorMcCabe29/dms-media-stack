@@ -25,7 +25,9 @@ PluginComponent {
     }
 
     function urlFor(name, ports) {
-        const custom = pluginData.urls?.[name]
+        // Links set in Settings → Plugins → Media Stack win over the older hand-edited "urls" map.
+        const link = (pluginData.links ?? []).find(l => l.container === name && l.url)
+        const custom = link?.url || pluginData.urls?.[name]
         if (custom) return custom
         const m = /(?:0\.0\.0\.0|\[::\]|::):(\d+)->\d+\/tcp/.exec(ports)
         return m ? `http://${hostIp}:${m[1]}` : ""

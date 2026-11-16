@@ -36,4 +36,14 @@ PluginSettings {
         description: "Notify when a container stops, turns unhealthy, comes back, or the VM can't be reached"
         defaultValue: true
     }
+    ListSettingWithInput {
+        settingKey: "links"
+        label: "Links"
+        description: "Optional. Where clicking a container opens, and the name shown next to it. Without a link, a container opens its first published port on the host (http://host:port)."
+        fields: [
+            { id: "container", label: "Container name", placeholder: "jellyfin", required: true, width: 140 },
+            { id: "url", label: "Link", placeholder: "https://jellyfin.example.com", width: 220 },
+            { id: "label", label: "Label (optional)", placeholder: "Films & TV", width: 130 }
+        ]
+    }
 }
